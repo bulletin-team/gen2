@@ -1,32 +1,22 @@
 const express = require('express');
 const fs = require('fs');
-const path = require('path');
+const async = require('async');
 const app = express();
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const serveStatic = require('serve-static');
 const SOCKET_PATH = '/tmp/bulletinv2.sock';
-const logger = {
-  log: function (obj) {
-    console.log('[' + Date.now() + '] [INFO] ' + path.basename(__filename) + ': ' + obj);
-  },
-  warn: function (obj) {
-    console.log('['+ Date.now() + '] [WARN] ' + path.basename(__filename) + ': ' + obj);
-  },
-  error: function (obj) {
-    console.log('[' +Date.now() + '] [ERROR] ' + path.basename(__filename) + ': ' + obj);
-  },
-};
-
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({extended: false}));
-app.use('/static', serveStatic('static'));
+const initializer = require('./initializer');
+const logger = require('./logger');
+const config = require('./config');
+const nop = function(){};
+initializer(app);
 
 app.get('/', function (req, res) {
-  res.send(JSON.stringify(req.cookies));
+  res.render('index.html');
 });
 
-fs.unlinkSync(SOCKET_PATH);
-app.listen(SOCKET_PATH, 5, function () {
-  logger.log('esgeedeet');
+fs.unlink(SOCKET_PATH, function (err) {
+  app.listen(SOCKET_PATH, 5, function (err) {
+    if (err) throw err;
+    logger.log('esgeedit');
+    fs.chmod(SOCKET_PATH, 0777, nop);
+  });
 });
